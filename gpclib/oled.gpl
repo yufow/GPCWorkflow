@@ -1,0 +1,78 @@
+
+// <oled.gpl>
+
+#include <math.gpl>
+
+int oled_1, oled_2, oled_3, oled_4, oled_5, oled_6, oled_7;
+
+function int_oled(x, y, font, colour, value) {
+	oled_1 = 0;
+	if(!value) {
+		putc_oled(1, ASCII_DIGIT0);
+		puts_oled(x, y, font, 1, colour);
+		return;
+	}
+    oled_1 = quick_order(value) + 1;
+    if(value < 0) {
+    	putc_oled(1, ASCII_MINUS);
+    	oled_1++;
+    }
+    oled_2 = oled_1;
+	value = abs(value);
+	do {
+    	putc_oled(oled_1, ASCII_DIGIT0 + value % 10);
+    	value /= 10; oled_1--;
+    } while(value);
+    puts_oled(x, y, font, oled_2, colour);
+}
+
+function polygon_oled(x, y, thickness, colour, num_vertices, vertices) {
+	for(oled_1=0; oled_1<num_vertices; oled_1++) {
+		if(oled_1 == num_vertices - 1) {
+			line_oled(
+				x + duint8(vertices + oled_1 * 2),
+				y + duint8(vertices + oled_1 * 2 + 1),
+				x + duint8(vertices),
+				y + duint8(vertices + 1),
+				thickness, 
+				colour
+			);
+		}
+		else {
+			line_oled(
+				x + duint8(vertices + oled_1 * 2),
+				y + duint8(vertices + oled_1 * 2 + 1),
+				x + duint8(vertices + oled_1 * 2 + 2),
+				y + duint8(vertices + oled_1 * 2 + 2 + 1),
+				thickness, 
+				colour
+			);
+		}
+	}
+}
+
+function fraction_oled(x, y, font, color, dp, num, den) {
+	oled_1 = num / den;
+	oled_2 = quick_order(oled_1);
+	oled_3 = 0;
+	oled_4 = 0;
+	if(oled_1 < 0) {
+		putc_oled(1 + oled_3, ASCII_MINUS);
+		oled_4 = 1;
+	}
+	oled_1 = abs(oled_1);
+	do {
+		putc_oled(1 + oled_4 + oled_2, ASCII_DIGIT0 + oled_1 % 10);
+		oled_1 /= 10;
+		oled_3++;
+	} while(oled_2-- + 1)
+	if(dp) {
+		putc_oled(oled_4 + oled_3 + 1, ASCII_PERIOD);
+		oled_3++;
+		
+		for(oled_5=0; oled_5<dp; oled_5++, oled_3++) {
+			putc_oled(1 + oled_4 + oled_3, ASCII_DIGIT0 + abs((num * quick_pow10(oled_5 + 1)) / den) % 10);
+		}
+	}
+	puts_oled(x, y, font, oled_4 + oled_3, color);
+}

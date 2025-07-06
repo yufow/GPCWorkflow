@@ -1,0 +1,76 @@
+
+// <keyboard.gpl>
+
+const uint8 KEYBOARD_ASCII_KEYS[] = {
+	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G,
+	KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N,
+	KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U,
+	KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z,
+	
+	KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0,
+	
+	KEY_TAB, KEY_SPACE, KEY_MINUS, KEY_EQUAL, KEY_LEFTBRACE, KEY_RIGHTBRACE,
+	KEY_BACKSLASH, KEY_HASHTILDE, KEY_SEMICOLON, KEY_APOSTROPHE, KEY_GRAVE, KEY_COMMA,
+	KEY_DOT, KEY_SLASH
+};
+
+const uint8 KEYBOARD_ASCII[] = {
+	ASCII_LOWER_A, ASCII_LOWER_B, ASCII_LOWER_C, ASCII_LOWER_D, ASCII_LOWER_E, ASCII_LOWER_F, ASCII_LOWER_G,
+	ASCII_LOWER_H, ASCII_LOWER_I, ASCII_LOWER_J, ASCII_LOWER_K, ASCII_LOWER_L, ASCII_LOWER_M, ASCII_LOWER_N,
+	ASCII_LOWER_O, ASCII_LOWER_P, ASCII_LOWER_Q, ASCII_LOWER_R, ASCII_LOWER_S, ASCII_LOWER_T, ASCII_LOWER_U,
+	ASCII_LOWER_V, ASCII_LOWER_W, ASCII_LOWER_X, ASCII_LOWER_Y, ASCII_LOWER_Z,
+	
+	ASCII_DIGIT1, ASCII_DIGIT2, ASCII_DIGIT3, ASCII_DIGIT4, ASCII_DIGIT5, ASCII_DIGIT6, ASCII_DIGIT7, ASCII_DIGIT8, ASCII_DIGIT9, ASCII_DIGIT0, 
+	
+	ASCII_SPACE, ASCII_SPACE, ASCII_MINUS, ASCII_EQUAL, ASCII_OPEN_BRACKET, ASCII_CLOSE_BRACKET,
+	ASCII_BACKSLASH, ASCII_TILDE, ASCII_SEMICOLON, ASCII_APOSTROPHE, ASCII_GRAVE, ASCII_COMMA,
+	ASCII_PERIOD, ASCII_SLASH
+	};
+
+const uint8 KEYBOARD_ASCII_MOD[] = {
+	ASCII_UPPER_A, ASCII_UPPER_B, ASCII_UPPER_C, ASCII_UPPER_D, ASCII_UPPER_E, ASCII_UPPER_F, ASCII_UPPER_G,
+	ASCII_UPPER_H, ASCII_UPPER_I, ASCII_UPPER_J, ASCII_UPPER_K, ASCII_UPPER_L, ASCII_UPPER_M, ASCII_UPPER_N,
+	ASCII_UPPER_O, ASCII_UPPER_P, ASCII_UPPER_Q, ASCII_UPPER_R, ASCII_UPPER_S, ASCII_UPPER_T, ASCII_UPPER_U,
+	ASCII_UPPER_V, ASCII_UPPER_W, ASCII_UPPER_X, ASCII_UPPER_Y, ASCII_UPPER_Z,
+
+	ASCII_EXCLAMATION, ASCII_QUOTE, ASCII_POUND, ASCII_DOLLAR, ASCII_PERCENT, ASCII_CARAT, ASCII_AMPERSAND, ASCII_ASTERISK, ASCII_OPEN_PARENTHESIS, ASCII_CLOSE_PARENTHESIS,
+	
+	ASCII_SPACE, ASCII_SPACE, ASCII_UNDERSCORE, ASCII_PLUS, ASCII_OPEN_BRACE, ASCII_CLOSE_BRACE,
+	ASCII_BAR, ASCII_POUND, ASCII_COLON, ASCII_AT, ASCII_SPACE, ASCII_LESS_THAN, 
+	ASCII_GREATER_THAN, ASCII_QUESTION
+};
+
+int keyboard_event_press_on,
+	keyboard_event_press_ptime,
+	keyboard_get_ascii_i,
+	keyboard_get_ascii_caps_lock;
+
+function keyboard_event_press(KEY) {
+	if(get_keyboard(KEY) && !keyboard_event_press_on) {
+		keyboard_event_press_on = KEY;
+		keyboard_event_press_ptime = 0;
+		return TRUE;
+	}
+	else if(KEY == keyboard_event_press_on && !get_keyboard(KEY)) {
+		keyboard_event_press_ptime = 0;
+		keyboard_event_press_on = FALSE;
+	}
+	if(get_keyboard(KEY) && KEY == keyboard_event_press_on) keyboard_event_press_ptime += get_rtime();
+	return FALSE;
+}
+
+function keyboard_get_ascii() {
+	if(keyboard_event_press(KEY_CAPSLOCK)) keyboard_get_ascii_caps_lock = !keyboard_get_ascii_caps_lock;
+	for(keyboard_get_ascii_i=0; keyboard_get_ascii_i<sizeof(KEYBOARD_ASCII_KEYS); keyboard_get_ascii_i++) {
+		if(keyboard_event_press(KEYBOARD_ASCII_KEYS[keyboard_get_ascii_i])) {
+			if((KEYBOARD_ASCII_KEYS[keyboard_get_ascii_i] < KEYBOARD_ASCII_KEYS[26]) && keyboard_get_ascii_caps_lock) {
+				return KEYBOARD_ASCII_MOD[keyboard_get_ascii_i];
+			}
+			if(get_modifiers(MOD_LSHIFT) || get_modifiers(MOD_RSHIFT)) {
+				return KEYBOARD_ASCII_MOD[keyboard_get_ascii_i];
+			}
+			return KEYBOARD_ASCII[keyboard_get_ascii_i];
+		}
+	}
+	return FALSE;
+}

@@ -1,0 +1,89 @@
+
+// <eeprom.gpl>
+
+define EEPROM_HEADER = 3;
+
+int eeprom_1,
+	eeprom_2,	
+	eeprom_3,
+	eeprom_4;
+	
+function eeprom_set_bits(val, address, bits) {
+	eeprom_2 = SPVAR_1 + address / 32;
+	eeprom_1 = address % 32;
+	eeprom_3 = eeprom_get_slot(eeprom_2) & eeprom_make_full_mask(eeprom_1);
+
+	val = val & eeprom_make_full_mask(bits); 
+	if (bits > 32 - eeprom_1) {
+		eeprom_3 = eeprom_3 | (val << eeprom_1);
+		set_pvar(eeprom_2, eeprom_3); 
+		eeprom_2++;
+		bits -= (32 - eeprom_1); 
+		val = val >> (32 - eeprom_1); 
+		eeprom_1 = 0; 
+		eeprom_3 = 0; 
+	}
+
+	eeprom_3 = eeprom_get_slot(eeprom_2) & eeprom_makeSaveMask(eeprom_1, bits);
+	eeprom_3 = eeprom_3 | (val << eeprom_1); 
+	set_pvar(eeprom_2, eeprom_3); 
+}
+
+function eeprom_get_bits(address, bits) {
+	eeprom_2 = SPVAR_1 + address / 32;
+	eeprom_1 = address % 32;
+	eeprom_3 = (eeprom_get_slot(eeprom_2) >> eeprom_1) & eeprom_make_full_mask(bits); 
+
+	if (bits > 32 - eeprom_1) {
+		eeprom_4 = eeprom_get_slot(eeprom_2 + 1);
+		eeprom_4 = eeprom_4 & eeprom_make_full_mask(bits - (32 - eeprom_1));
+		eeprom_4 = eeprom_4 << (32 - eeprom_1);
+		eeprom_3 = (eeprom_3 & eeprom_make_full_mask(32 - eeprom_1)) | eeprom_4;
+	}
+	
+	eeprom_1 += bits; 
+	eeprom_3 = eeprom_3 & eeprom_make_full_mask(bits); 	
+	
+	return eeprom_3;
+}
+
+function eeprom_make_full_mask(bits) {	
+	if (bits == 32) {
+		return -1;
+	}
+	return 0x7FFFFFFF >> (31 - bits); 
+}
+
+function eeprom_make_sign_mask(bits) {
+	return eeprom_make_full_mask(bits - 1);
+}
+
+function eeprom_get_slot(slot) { 
+	return get_pvar(slot, 0x80000000, 0x7FFFFFFF, 0);
+}
+
+function eeprom_makeSaveMask(currentBit, bits) {
+	return ~(eeprom_make_full_mask(bits) << (currentBit));
+}
+
+function eeprom_get_bit_count(val) {
+	eeprom_4 = 0; 
+	while (val) { 
+		eeprom_4++; 
+		val = abs(val >> 1); 
+	}
+	return eeprom_4;
+}
+
+function eeprom_array(adr, element_size) {
+	eeprom_set_bits(clamp(element_size, 1, 4), clamp(adr, 0, 2048), 3);
+	return adr;
+}
+
+function eeprom_array_get(adr, idx) {
+	return eeprom_get_bits(adr + EEPROM_HEADER + eeprom_get_bits(adr, 3) * idx, eeprom_get_bits(adr, 3));
+}
+
+function eeprom_array_set(adr, idx, val) {
+	eeprom_set_bits(val, adr + EEPROM_HEADER + eeprom_get_bits(adr, 3) * idx, eeprom_get_bits(adr, 3));
+}

@@ -1,0 +1,133 @@
+
+// <string.gpl>
+
+#include <memory.gpl>
+
+int string_1, string_2, string_3,
+	string_4, string_5, string_6;
+
+function string(const_adr) {
+	string_1 = 0;
+	while(dchar(const_adr + string_1)) string_1++;
+	string_2 = memory_alloc(string_1);
+	memory_load(string_2, const_adr, char, string_1);
+	return string_2;
+}
+
+function string_print(x, y, font, color, adr) {
+	for(string_2=0; deref[adr + string_2]>0; string_2++) {
+		putc_oled(1 + string_2, deref[adr + string_2]);
+	}
+	puts_oled(x, y, font, string_2, color);
+}
+
+function string_itoa(integer) {
+	string_1 = integer;
+	string_2 = 0;
+	do {
+    	string_2 ++;
+    	string_1 /= 10;
+	}
+	while(string_1);
+	string_6 = string_2;
+	if(integer < 0) {
+		string_6++;
+	}
+	string_3 = memory_alloc(string_6);
+	if(!string_3) return 0;
+	if(integer < 0) {
+		integer = abs(integer);
+		deref[string_3] = ASCII_MINUS;
+	}
+	for(string_4=0; string_4<string_2; string_4++) {
+		string_5 = integer / pow(10,string_4) % 10;
+		deref[string_3 + string_6 - string_4 - 1] = ASCII_DIGIT0 + string_5;
+	}
+	return string_3;
+}
+
+function string_atoi(adr) {
+	string_1 = 0;
+	string_2 = 1;
+	if(deref[adr] == ASCII_MINUS) {
+		string_2 = -1;
+		string_1 = 1;
+	}
+	string_3 = memory_size(adr);
+	string_4 = 0;
+	for(string_5=string_1; string_5<string_3; string_5++) {
+		string_6 = deref[adr + string_5] - ASCII_DIGIT0;
+		if(string_6 >= 0 && string_6 <= 9) {
+			string_4 += string_6 * pow(10, string_3 - string_5 - 1);
+		}
+		else return 0;
+	}
+	return string_4 * string_2;
+}
+
+function string_len(adr) {
+	string_1 = 0;
+	while(deref[adr + string_1]) {
+		string_1++;
+	}
+	return string_1;
+}
+
+function string_cat(adr1, adr2) {
+	string_1 = memory_size(adr1);
+	string_2 = memory_size(adr2);
+	string_3 = string_1 + string_2;
+	string_4 = memory_alloc(string_3);
+	if(!string_4) return 0;
+	for(string_5=0; string_5<string_1; string_5++) {
+		deref[string_4 + string_5] = deref[adr1 + string_5];
+	}
+	for(string_5=0; string_5<string_2; string_5++) {
+		deref[string_4 + string_5 + string_1] = deref[adr2 + string_5];
+	}
+	return string_4;
+}
+
+function string_cmp(adr1, adr2) {
+	string_1 = memory_size(adr1);
+	string_2 = memory_size(adr2);
+	if(string_1 != string_2) return 1;
+	for(string_3=0; string_3<string_1; string_3++) {
+		if(deref[adr1 + string_3] != deref[adr2 + string_3]) return 1;
+	}
+	return 0;
+}
+
+const string htoa_chars = "0123456789ABCDEF";
+function string_htoa(val) {
+	string_3 = memory_alloc(10);
+    deref[string_3 + 0] = ASCII_DIGIT0;
+    deref[string_3 + 1] = ASCII_LOWER_X;
+    for(string_1=0; string_1<8; string_1++) {
+        string_2 = ((val & (0x0000000F << (4 * (7 - string_1)))) >> (4 * (7 - string_1))) & 0x0000000F;
+        deref[string_3 + 2 + string_1] = duint8(htoa_chars[string_2]);
+    }
+    return string_3;
+}
+
+function string_atoh(int adr) {
+	string_2 = memory_size(adr);
+	if(string_2 > 10 || string_2 < 1) return 0;
+	string_4 = 0;
+	for(string_1=2; string_1<string_2; string_1++) {
+		string_3 = deref[adr + string_1];
+		if(string_3 >= ASCII_LOWER_A && string_3 <= ASCII_LOWER_F) {
+			string_3 = string_3 - ASCII_LOWER_A + 10;
+		}
+		else if(string_3 >= ASCII_UPPER_A && string_3 <= ASCII_UPPER_F) {
+			string_3 = string_3 - ASCII_UPPER_A + 10;
+		}
+		else if(string_3 >= ASCII_DIGIT0 && string_3 <= ASCII_DIGIT9) {
+			string_3 = string_3 - ASCII_DIGIT0;
+		}
+		else return 0;
+		string_4 = (string_4 << 4) | string_3;
+	}
+	return string_4;
+}
+

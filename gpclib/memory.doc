@@ -1,0 +1,59 @@
+
+// Manual for: <memory.gpl>
+
+
+// Important notes:
+	
+	// In order for this library to function correctly, these variables must be the first variables to be declared in a script:
+	int deref[0];
+	int HEAP[HEAP_SIZE];
+	int ALLOCATED[HEAP_SIZE / 32 + 1];
+	
+	// You could make a preprocessor do this automatically by inserting this string into the start of the file:
+	"int deref[0];\nint HEAP[HEAP_SIZE];\nint ALLOCATED[HEAP_SIZE / 32 + 1];\n\n"
+
+
+// Functions:
+
+
+	// General purpose
+	function memory_unique() return int										// Returns a unique value that currently does not exist anywhere in memory
+	function memory_find(value) return int									// Finds and returns the address of the first instance of a value in memory
+	function memory_copy(dest_address, source_address)						// Copies values from one memory block into another
+	function memory_load(address, const_addr, type, length) return int		// Loads data from the data section into a memory block
+	
+	// Heap only
+	function int(value) return int											// Allocates an integer on the heap and returns a pointer
+	function memory_nullptr() return int									// Returns a pointer to a zero-length memory block on the heap
+	function memory_alloc(size) return int									// Allocates a memory block of a given size and returns its pointer
+	function memory_realloc(address, size) return int						// Reallocates the size of a given memory block and returns its pointer (which may have changed)
+	function memory_allocated() return int									// Returns the total number of allocated qwords on the heap
+	function memory_free(address)											// Frees a memory block
+	function memory_free_last()												// Frees the most recently allocated memory block
+	function memory_free_all()												// Frees all memory blocks
+	function memory_free_2d(address)										// Frees a 2D data structure
+	function memory_size(address) return int								// Returns the length of a memory block
+	function memory_insert(address, index, value) return int				// Inserts more memory into a memory block and writes a value to it
+	function memory_append(address, value) return int						// Adds more memory to the end of a memory block and writes a value to it
+	function memory_remove(address, index) return int						// Removes a specific index from a memory block
+	
+	
+// Dereference operator (*ptr) :
+	
+	deref[address]															// Used to dereference a pointer to an address in memory (works on both heap and stack addresses)
+	
+
+// Getting a variable's address	(&var) :
+
+	memory_find(var = memory_unique());										// Finds the index of the unique value passed into the target var. (gets var's address)
+	
+	
+// Types:
+	
+	string, char, uint8, int8, uint16, int16, int32							// For the 'type' argument in memory_load() only
+	
+
+// Constants:
+
+	HEAP_SIZE																// defines how large the heap is, if you get stack overflow, try reducing this value. 300 by default
+	

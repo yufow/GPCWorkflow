@@ -1,0 +1,19 @@
+
+// Manual for: <string.gpl>
+
+
+// Functions:
+
+	// General purpose
+	function string_print(x, y, font, colour, address)			// Prints a string stored in memory
+	function string_cmp(address1, address2) return int			// Compares two strings in memory, 0 = same, 1 = not same
+	function string_len(address) return int						// Returns the length of a string excluding null terminator
+	
+	// Heap only
+	function string(const_address) return int 					// Takes a const string, allocates sufficient memory on the heap, and writes the string to memory. Returns string pointer
+	function string_cat(address1, address2) return int			// Takes two strings, allocates a new block and concatenates the two strings together there. Returns string pointer
+	function string_itoa(value) return int						// Takes an integer and converts it to an ascii string. Returns string pointer
+	function string_atoi(address) return int					// Takes an ascii string of an integer and converts it to an integer
+	function string_htoa(value) return int						// Takes an integer and converts it to an ascii string in hexadecimal form. Returns string pointer
+	function string_atoh(address) return int					// Takes an ascii string of an integer in hex form and converts it to an integer
+	

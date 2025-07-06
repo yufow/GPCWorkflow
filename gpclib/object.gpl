@@ -1,0 +1,29 @@
+
+// <object.gpl>
+
+#include <memory.gpl>
+#include <string.gpl>
+
+function Object() { return memory_alloc(1); }
+
+function Object_int(adr, value) { return Object_attr(adr, int(value)); }
+
+function Object_int_get(adr, attribute) { return deref[Object_attr_get(adr, attribute)]; }
+
+function Object_int_set(adr, attribute, value) { deref[Object_attr_get(adr, attribute)] = value; }
+
+function Object_string(adr, const_adr) { return Object_attr(adr, string(const_adr)); }
+
+function Object_string_get(adr, attribute) { return Object_attr_get(adr, attribute); }
+
+function Object_string_set(adr, attribute, value) { Object_attr_set(adr, attribute, value); }
+
+function Object_attr(adr, attribute) { return memory_append(adr, attribute); }
+
+function Object_attr_id(adr) { return memory_size(adr) - 1; }
+
+function Object_attr_set(adr, attribute, value) { deref[adr + attribute] = value; }
+
+function Object_attr_get(adr, attribute) { return deref[adr + attribute]; }
+
+function Object_free(adr) { memory_free_2d(adr); }

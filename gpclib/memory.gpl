@@ -1,0 +1,209 @@
+
+// <memory.gpl>
+
+enum { string }
+enum { char }
+enum { uint8, int8, uint16, int16, int32, int }
+
+define DWORD = 4;
+define HEAP_SIZE = 300;
+define MAX_VARS = 1023;
+
+int memory_1, memory_2, memory_3,
+	memory_4, memory_5, memory_6,
+	memory_7, memory_8, memory_9;
+	
+int MEMORY_LAST_POINTER;
+
+function memory_unique() {
+	for(memory_2=0x80000000; memory_2<0x7FFFFFF; memory_2++) {
+		memory_4 = 0;
+		for(memory_3=0; memory_3<=MAX_VARS; memory_3++) {
+			if(deref[memory_3] == memory_2) memory_4++;
+			if(memory_4 > 1) break;
+			if(memory_3 == MAX_VARS) {
+				memory_3 = 0;
+				memory_4 = 0;
+				return memory_2;
+			}
+		}
+	}
+	return 0;
+}
+
+function memory_find(val) {
+	for(memory_2=0; memory_2<MAX_VARS; memory_2++) {
+		if(deref[memory_2] == val) {
+			deref[memory_2] = 0;
+			return memory_2;
+		}
+	}
+	return 0;
+}
+
+function int(val) {
+	memory_2 = memory_alloc(1);
+	deref[memory_2] = val;
+	return memory_2;
+}
+
+function memory_size(adr) {
+	if(adr <= 0) return 0;
+	memory_1 = 0;
+	while(memory_dword_is_allocated(adr + memory_1)){memory_1++}
+	return memory_1;
+}
+
+function memory_insert(adr, idx, val) {
+	memory_7 = memory_size(adr) + 1;
+	adr = memory_realloc(adr, memory_7);
+	memory_8 = val;
+	for(memory_1=idx; memory_1<memory_7; memory_1++) {
+		memory_9 = deref[adr + memory_1];
+		deref[adr + memory_1] = memory_8;
+		memory_8 = memory_9;
+	}
+	return adr;
+}
+
+function memory_append(adr, val) {
+	return memory_insert(adr, memory_size(adr), val);
+}
+
+function memory_remove(adr, idx) {
+	memory_7 = memory_size(adr);
+	memory_8 = 0;
+	for(memory_1=0; memory_1<memory_7; memory_1++) {
+		if(memory_1 != idx) {
+			memory_9 = deref[adr + memory_1];
+			deref[adr + memory_8] = memory_9;
+			memory_8++;
+		}
+	}
+	adr = memory_realloc(adr, memory_7 - 1);
+	return adr;
+}
+
+function memory_load(adr, const_adr, type, len) {
+	for(memory_1=0; memory_1<len; memory_1++) {
+		switch(type) {
+			case uint8  { deref[adr + memory_1] = duint8 (const_adr + memory_1 * 1); break; }
+			case int8   { deref[adr + memory_1] = dint8  (const_adr + memory_1 * 1); break; }
+			case uint16 { deref[adr + memory_1] = duint16(const_adr + memory_1 * 2); break; }
+			case int16  { deref[adr + memory_1] = dint16 (const_adr + memory_1 * 2); break; }
+			case int32  { deref[adr + memory_1] = dint32 (const_adr + memory_1 * 4); break; }
+			case int    { deref[adr + memory_1] = dint32 (const_adr + memory_1 * 4); break; }
+		}
+	}
+	return adr;
+}
+
+function memory_copy(dst, src, len) {
+	for(memory_1=0; memory_1<len; memory_1++) {
+		deref[dst + memory_1] = deref[src + memory_1];
+	}
+}
+
+function memory_nullptr() {
+	return memory_remove(memory_alloc(1), 0);
+}
+
+function memory_alloc(len) {
+	if(len <= 0) return 0;
+	memory_1 = 0;
+	memory_2 = 0;
+	memory_3 = len + 2;
+	while(memory_3) {
+		if(memory_1 >= HEAP_SIZE) return 0;
+		if(memory_dword_is_allocated(memory_1)) memory_3 = len + 2;
+		else memory_3--;
+		memory_1++;
+	}
+	memory_2 = memory_1 - (len + 1);
+	for(memory_1=0; memory_1<len; memory_1++) {
+		memory_alloc_dword(memory_2 + memory_1);
+	}
+	MEMORY_LAST_POINTER = memory_2;
+	return memory_2;
+}
+
+function memory_realloc(adr, len) {
+	if(adr <= 0) return 0;
+	memory_6 = memory_size(adr);
+	if(len == memory_6) return adr;
+	if(len < memory_6) {
+		memory_free(adr + memory_6 - (memory_6 - len));
+		return adr;
+	}
+	memory_3 = len - memory_6;
+	for(memory_1=0; memory_1<memory_3 + 1; memory_1++) {
+		if((adr + memory_6 + memory_1) >= HEAP_SIZE) return adr;
+		if(memory_dword_is_allocated(adr + memory_6 + memory_1)) {
+			memory_2 = memory_alloc(len);
+			memory_copy(memory_2, adr, memory_size(adr));
+			memory_free(adr);
+			MEMORY_LAST_POINTER = memory_2;
+			return memory_2;
+		}
+	}
+	for(memory_1=0; memory_1<len-memory_6; memory_1++) {
+		if((adr + memory_6 + memory_1) >= HEAP_SIZE) return adr;
+		memory_alloc_dword(adr + memory_6 + memory_1);
+	}
+	MEMORY_LAST_POINTER = memory_2;
+	return adr;
+}
+
+function memory_allocated() {
+	memory_3 = 0;	
+	for(memory_1=0; memory_1<HEAP_SIZE; memory_1++) {
+		memory_3 += memory_dword_is_allocated(memory_1);		
+	}
+	return memory_3;
+}
+
+function memory_free(adr) {
+	if(adr <= 0) return;
+	memory_1 = 0;
+	while(memory_dword_is_allocated(adr + memory_1)) {
+		memory_dealloc_dword(adr + memory_1);
+		memory_1++;
+	}
+}
+
+function memory_free_last() {
+	memory_free(MEMORY_LAST_POINTER);
+}
+
+function memory_free_all() {
+	for(memory_1=0; memory_1<HEAP_SIZE; memory_1++) {
+		HEAP[memory_1] = 0x00;
+		if(memory_1 < HEAP_SIZE / 32 + 1) ALLOCATED[memory_1] = 0x00;
+	}
+}
+
+function memory_free_2d(adr) {
+	memory_6 = memory_size(adr);
+	for(memory_8=0; memory_8<memory_6; memory_8++) {
+		memory_free(deref[adr + memory_8]);
+	}
+	memory_free(adr);
+}
+
+function memory_alloc_dword(adr) {
+	memory_4 = adr/32;
+	memory_5 = adr%32;
+	ALLOCATED[memory_4] = ALLOCATED[memory_4] | (0x01 << memory_5);
+	HEAP[adr] = 0x00;
+}
+
+function memory_dword_is_allocated(adr) {
+	return (ALLOCATED[adr/32] >> (adr%32)) & 0x01 ;
+}
+
+function memory_dealloc_dword(adr) {
+	memory_4 = adr/32;
+	memory_5 = adr%32;
+	ALLOCATED[memory_4] = ALLOCATED[memory_4] & ~(0x01 << memory_5);
+	HEAP[adr] = 0x00;
+}
