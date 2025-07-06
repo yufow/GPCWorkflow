@@ -15,17 +15,15 @@
 ### USING GPL
 
 
-Building a gpl file:
-	`gpl filename.gpl`
+Building a gpl file:	`gpl filename.gpl`
 
 
 ### GPL FILE FEATURES
 
-Import modules from gpclib:		 			`#include <module>`
-Import files from your own directories: 	`#include "filepath"`
-
-Load command line arguments into script:	`#pragma args`
-Build a file with cl args:					`gpl filename.gpl arg1 arg2 arg3`
+- Import modules from gpclib:		 			`#include <module>`
+- Import files from your own directories: 		`#include "filepath"`
+- Load command line arguments into script:		`#pragma args`
+- Build a file with cl args:					`gpl filename.gpl arg1 arg2 arg3`
 
 
 
