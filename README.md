@@ -1,10 +1,8 @@
-GPCWorkflow
-===========
+## GPCWorkflow
 
 
 
-SETUP
------
+### SETUP
 
 - Compile gpl.c with gcc:   gcc gpl.c -o gpl
 
@@ -14,16 +12,14 @@ SETUP
 
 
 
-USING GPL
----------
+### USING GPL
 
 
 Building a gpl file:
 - gpl filename.gpl
 
 
-GPL FILE FEATURES
------------------
+### GPL FILE FEATURES
 
 Import modules from gpclib:		 	#include <module>
 Import files from your own directories: 	#include "filepath"
